@@ -51,7 +51,7 @@ export class AuthService {
 
   async findUserById(id: string) {
     const user = await this.userModel.findById(id);
-    const { password, ...rest} = user.toJSON();
+    const { password, ...rest } = user.toJSON();
     return rest;
   }
 
@@ -90,13 +90,20 @@ export class AuthService {
     const userData = await this.create({
       email: registerUserDto.email,
       name: registerUserDto.name,
-      password: registerUserDto.password
+      password: registerUserDto.password,
     });
     const loginDto: LoginDto = {
       email: registerUserDto.email,
-      password: registerUserDto.password
-    }
+      password: registerUserDto.password,
+    };
     return this.login(loginDto);
+  }
+
+  async checkToken(user: User): Promise<LoginResponse> {
+    return {
+      user,
+      token: this.getJwtToken({ id: user._id }),
+    };
   }
 
   private getJwtToken(payload: JwtPayload) {

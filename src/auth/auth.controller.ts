@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Request, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { CreateUserDto, LoginDto, RegisterUserDto, UpdateAuthDto } from './dto';
+import { CreateUserDto, LoginDto, RegisterUserDto } from './dto';
 import { AuthGuard } from './guard/auth.guard';
 
 @Controller("auth")
@@ -43,4 +43,13 @@ export class AuthController {
   register(@Body() registerUserDto: RegisterUserDto) {
     return this.authService.register(registerUserDto);
   }
+
+
+  @UseGuards(AuthGuard)
+  @Get('/check-token')
+  checkToken(@Request() req: Request) {
+    const user = req['user'];
+    return this.authService.checkToken(user);
+  }
+
 }
