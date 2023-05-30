@@ -1,18 +1,27 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from "@nestjs/mongoose";
 
 import * as bcryptjs from "bcryptjs";
 import { Model } from "mongoose";
 import { CreateUserDto } from "./dto/create-user.dto";
+import { LoginDto } from "./dto/login.dto";
 import { UpdateAuthDto } from "./dto/update-auth.dto";
 import { User } from "./entities/user.entity";
+import { JwtPayload } from './interfaces/jwt-payload';
 
 
 @Injectable()
 export class AuthService {
 
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>
+    @InjectModel(User.name) private userModel: Model<User>,
+    private jwtService: JwtService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -22,7 +31,7 @@ export class AuthService {
 
       const newUser = new this.userModel({
         password: bcryptjs.hashSync(password, 10),
-        ...userData
+        ...userData,
       });
 
       // 2- Guardar el usuario
@@ -51,5 +60,28 @@ export class AuthService {
 
   remove(id: number) {
     return `This action removes a #${id} auth`;
+  }
+
+  async login(loginDto: LoginDto) {
+    const { email, password } = loginDto;
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new UnauthorizedException('Not valid credentials');
+    }
+
+    if (!bcryptjs.compareSync(password, user.password)) {
+      throw new UnauthorizedException('Not valid credentials');
+    }
+
+    const { password: _, ...rest } = user.toJSON();
+    return {
+      user: rest,
+      token: this.getJwtToken({ id: user.id }),
+    };
+  }
+
+  getJwtToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload);
   }
 }
