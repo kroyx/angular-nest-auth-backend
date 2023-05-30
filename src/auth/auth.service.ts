@@ -9,11 +9,10 @@ import { InjectModel } from "@nestjs/mongoose";
 
 import * as bcryptjs from "bcryptjs";
 import { Model } from "mongoose";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { LoginDto } from "./dto/login.dto";
-import { UpdateAuthDto } from "./dto/update-auth.dto";
+import { CreateUserDto, LoginDto, RegisterUserDto, UpdateAuthDto } from './dto';
 import { User } from "./entities/user.entity";
 import { JwtPayload } from './interfaces/jwt-payload';
+import { LoginResponse } from './interfaces/login.response';
 
 
 @Injectable()
@@ -46,8 +45,8 @@ export class AuthService {
     }
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  findAll(): Promise<User[]> {
+    return this.userModel.find();
   }
 
   findOne(id: number) {
@@ -62,7 +61,7 @@ export class AuthService {
     return `This action removes a #${id} auth`;
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<LoginResponse> {
     const { email, password } = loginDto;
     const user = await this.userModel.findOne({ email });
 
@@ -81,7 +80,20 @@ export class AuthService {
     };
   }
 
-  getJwtToken(payload: JwtPayload) {
+  async register(registerUserDto: RegisterUserDto): Promise<LoginResponse> {
+    const userData = await this.create({
+      email: registerUserDto.email,
+      name: registerUserDto.name,
+      password: registerUserDto.password
+    });
+    const loginDto: LoginDto = {
+      email: registerUserDto.email,
+      password: registerUserDto.password
+    }
+    return this.login(loginDto);
+  }
+
+  private getJwtToken(payload: JwtPayload) {
     return this.jwtService.sign(payload);
   }
 }
