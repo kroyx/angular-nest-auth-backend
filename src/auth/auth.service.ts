@@ -72,11 +72,11 @@ export class AuthService {
     const user = await this.userModel.findOne({ email });
 
     if (!user) {
-      throw new UnauthorizedException('Not valid credentials');
+      throw new UnauthorizedException('Not valid credentials - user does not exist');
     }
 
     if (!bcryptjs.compareSync(password, user.password)) {
-      throw new UnauthorizedException('Not valid credentials');
+      throw new UnauthorizedException('Not valid credentials - password is wrong');
     }
 
     const { password: _, ...rest } = user.toJSON();

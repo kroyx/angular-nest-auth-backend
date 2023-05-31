@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException('El usuario no está autenticado');
+      throw new UnauthorizedException('User is not authenticated');
     }
 
     try { // Comprueba si el token ha sido generado con la misma semilla
@@ -27,12 +27,12 @@ export class AuthGuard implements CanActivate {
       );
 
       const user = await this.authService.findUserById(payload.id);
-      if (!user) throw new UnauthorizedException('El usuario no existe');
-      if (!user.isActive) throw new UnauthorizedException('El usuario no está activo');
+      if (!user) throw new UnauthorizedException('User does not exist');
+      if (!user.isActive) throw new UnauthorizedException('User account is not active');
 
       request['user'] = user;
     } catch (error) {
-      throw new UnauthorizedException('Token no válido');
+      throw new UnauthorizedException('Not valid token');
     }
 
     return true;
